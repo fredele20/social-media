@@ -83,6 +83,10 @@ func (u dbStore) GetUserByEmail(ctx context.Context, email string) (*models.User
 	return u.GetUserByField(ctx, "email", email)
 }
 
+func (u dbStore) GetUserById(ctx context.Context, id string) (*models.Users, error) {
+	return u.GetUserByField(ctx, "userId", id)
+}
+
 func (u dbStore) ListUsers(ctx context.Context, filters *models.UserFilter) (*models.ListUsers, error) {
 	opts := options.Find()
 	opts.SetProjection(bson.M{
