@@ -33,7 +33,7 @@ func (u dbStore) CreateUser(ctx context.Context, payload *models.Users) (*models
 
 	var user models.Users
 
-	if err := u.user().FindOne(ctx, filters).Decode(&user); err != nil {
+	if err := u.user().FindOne(ctx, filters).Decode(&user); err == nil {
 		return nil, ErrDuplicate
 	}
 	_, err := u.user().InsertOne(ctx, payload)
@@ -58,7 +58,7 @@ func (u dbStore) GetUserByEmail(ctx context.Context, email string) (*models.User
 }
 
 func (u dbStore) GetUserById(ctx context.Context, id string) (*models.Users, error) {
-	return u.GetUserByField(ctx, "userId", id)
+	return u.GetUserByField(ctx, "id", id)
 }
 
 func (u dbStore) ListUsers(ctx context.Context, filters *models.UserFilter) (*models.ListUsers, error) {

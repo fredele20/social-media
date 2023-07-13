@@ -13,6 +13,7 @@ import (
 	"github.com/fredele20/social-media/utils"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
@@ -71,6 +72,8 @@ func (c *CoreService) RegisterUser(ctx context.Context, payload *models.Users) (
 	payload.Status = models.NotActive
 	payload.CreatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 	payload.UpdatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	generateId := primitive.NewObjectID()
+	payload.Id = generateId.Hex()
 
 	user, err := c.db.CreateUser(ctx, payload)
 	if err != nil {
