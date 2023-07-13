@@ -16,23 +16,24 @@ import (
 )
 
 var (
-	ErrUserValidationFailed   = errors.New("failed to validate user before persisting")
-	ErrCreateUserDuplicate    = errors.New("failed to create user, duplicate record found")
-	ErrCreateUserFailed       = errors.New("user creation failed")
-	ErrPhoneNumberNotValid    = errors.New("sorry, phone number cannot be used")
-	ErrListUserFailed         = errors.New("failed to list users")
-	ErrFailedToGetUserByEmail = errors.New("failed to get user with provided email")
-	ErrFailedToGetUserById    = errors.New("failed to get user with the provided id")
+	ErrUserValidationFailed     = errors.New("failed to validate user before persisting")
+	ErrCreateUserDuplicate      = errors.New("failed to create user, duplicate record found")
+	ErrCreateUserFailed         = errors.New("user creation failed")
+	ErrPhoneNumberNotValid      = errors.New("sorry, phone number cannot be used")
+	ErrListUserFailed           = errors.New("failed to list users")
+	ErrFailedToGetUserByEmail   = errors.New("failed to get user with provided email")
+	ErrFailedToGetUserById      = errors.New("failed to get user with the provided id")
+	ErrCreateUserFollowerFailed = errors.New("failed to create a follower for the user")
 )
 
-type UserService struct {
-	mongo  database.Datastore
+type CoreService struct {
+	db     database.Datastore
 	logger *logrus.Logger
 }
 
-func NewUserService(mongo database.Datastore, l *logrus.Logger) *UserService {
-	return &UserService{
-		mongo:  mongo,
+func NewCoreService(db database.Datastore, l *logrus.Logger) *CoreService {
+	return &CoreService{
+		db:     db,
 		logger: l,
 	}
 }
@@ -55,9 +56,9 @@ func parsePhone(phone, iso2 string) (string, error) {
 	return phonenumbers.Format(num, phonenumbers.E164), nil
 }
 
-func (u *UserService) RegisterUser(ctx context.Context, payload *models.Users) (*models.Users, error) {
+func (c *CoreService) RegisterUser(ctx context.Context, payload *models.Users) (*models.Users, error) {
 	if err := payload.Validate(); err != nil {
-		u.logger.WithError(err).Error(ErrUserValidationFailed.Error())
+		c.logger.WithError(err).Error(ErrUserValidationFailed.Error())
 		return nil, err
 	}
 
@@ -71,45 +72,55 @@ func (u *UserService) RegisterUser(ctx context.Context, payload *models.Users) (
 	payload.CreatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 	payload.UpdatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 
-	user, err := u.mongo.CreateUser(ctx, payload)
+	user, err := c.db.CreateUser(ctx, payload)
 	if err != nil {
 		fmt.Println(err.Error())
 		if err == mongod.ErrDuplicate {
-			u.logger.WithError(err).Error("create user failed, attempted duplicate record")
+			c.logger.WithError(err).Error("create user failed, attempted duplicate record")
 			return nil, ErrCreateUserDuplicate
 		}
-		u.logger.WithError(err).Error(err.Error())
+		c.logger.WithError(err).Error(err.Error())
 		return nil, ErrCreateUserFailed
 	}
 
 	return user, nil
 }
 
-func (u *UserService) ListUsers(ctx context.Context, filters *models.UserFilter) (*models.ListUsers, error) {
-	users, err := u.mongo.ListUsers(ctx, filters)
+func (c *CoreService) ListUsers(ctx context.Context, filters *models.UserFilter) (*models.ListUsers, error) {
+	users, err := c.db.ListUsers(ctx, filters)
 	if err != nil {
-		u.logger.WithError(err).Error(ErrListUserFailed)
+		c.logger.WithError(err).Error(ErrListUserFailed)
 		return nil, err
 	}
 
 	return users, nil
 }
 
-func (u *UserService) GetUserByEmail(ctx context.Context, email string) (*models.Users, error) {
-	user, err := u.mongo.GetUserByEmail(ctx, email)
+func (c *CoreService) GetUserByEmail(ctx context.Context, email string) (*models.Users, error) {
+	user, err := c.db.GetUserByEmail(ctx, email)
 	if err != nil {
-		u.logger.WithError(err).Error(ErrFailedToGetUserByEmail.Error())
+		c.logger.WithError(err).Error(ErrFailedToGetUserByEmail.Error())
 		return nil, err
 	}
 
 	return user, nil
 }
 
-func (u *UserService) GetUserById(ctx context.Context, id string) (*models.Users, error) {
-	user, err := u.mongo.GetUserById(ctx, id)
+func (c *CoreService) GetUserById(ctx context.Context, id string) (*models.Users, error) {
+	user, err := c.db.GetUserById(ctx, id)
 	if err != nil {
-		u.logger.WithError(err).Error(ErrFailedToGetUserById)
+		c.logger.WithError(err).Error(ErrFailedToGetUserById)
 		return nil, err
 	}
 	return user, nil
+}
+
+func (c *CoreService) CreateUserFollower(ctx context.Context, payload *models.Follows) (*models.Follows, error) {
+	follow, err := c.db.CreateUserFollower(ctx, payload)
+	if err != nil {
+		c.logger.WithError(err).Error(ErrCreateUserFollowerFailed)
+		return nil, err
+	}
+
+	return follow, nil
 }
