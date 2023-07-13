@@ -16,18 +16,21 @@ import (
 )
 
 var (
-	ErrUserValidationFailed = errors.New("failed to validate user before persisting")
-	ErrCreateUserDuplicate  = errors.New("failed to create user, duplicate record found")
-	ErrCreateUserFailed     = errors.New("user creation failed")
-	ErrPhoneNumberNotValid = errors.New("sorry, phone number cannot be used")
+	ErrUserValidationFailed   = errors.New("failed to validate user before persisting")
+	ErrCreateUserDuplicate    = errors.New("failed to create user, duplicate record found")
+	ErrCreateUserFailed       = errors.New("user creation failed")
+	ErrPhoneNumberNotValid    = errors.New("sorry, phone number cannot be used")
+	ErrListUserFailed         = errors.New("failed to list users")
+	ErrFailedToGetUserByEmail = errors.New("failed to get user with provided email")
+	ErrFailedToGetUserById    = errors.New("failed to get user with the provided id")
 )
 
 type UserService struct {
-	mongo  database.UserDatastore
+	mongo  database.Datastore
 	logger *logrus.Logger
 }
 
-func NewUserService(mongo database.UserDatastore, l *logrus.Logger) *UserService {
+func NewUserService(mongo database.Datastore, l *logrus.Logger) *UserService {
 	return &UserService{
 		mongo:  mongo,
 		logger: l,
@@ -79,5 +82,34 @@ func (u *UserService) RegisterUser(ctx context.Context, payload *models.Users) (
 		return nil, ErrCreateUserFailed
 	}
 
+	return user, nil
+}
+
+func (u *UserService) ListUsers(ctx context.Context, filters *models.UserFilter) (*models.ListUsers, error) {
+	users, err := u.mongo.ListUsers(ctx, filters)
+	if err != nil {
+		u.logger.WithError(err).Error(ErrListUserFailed)
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (u *UserService) GetUserByEmail(ctx context.Context, email string) (*models.Users, error) {
+	user, err := u.mongo.GetUserByEmail(ctx, email)
+	if err != nil {
+		u.logger.WithError(err).Error(ErrFailedToGetUserByEmail.Error())
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (u *UserService) GetUserById(ctx context.Context, id string) (*models.Users, error) {
+	user, err := u.mongo.GetUserById(ctx, id)
+	if err != nil {
+		u.logger.WithError(err).Error(ErrFailedToGetUserById)
+		return nil, err
+	}
 	return user, nil
 }
