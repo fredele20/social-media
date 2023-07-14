@@ -18,6 +18,7 @@ func NewHandler(r *routes.RoutesService) *Handler {
 
 func UserHandler(incomingRoutes *gin.Engine, h Handler) {
 	incomingRoutes.POST("/users/register/", h.routes.RegisterUser())
+	incomingRoutes.POST("/users/login", h.routes.Login())
 	incomingRoutes.GET("/users/", h.routes.ListUsers())
 	incomingRoutes.GET("/users/:id", h.routes.GetUserById())
 	incomingRoutes.POST("/users/follow", h.routes.CreateUserFollower())

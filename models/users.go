@@ -16,6 +16,7 @@ type Users struct {
 	PictureURL string    `json:"pictureUrl"`
 	Password   string    `json:"password"`
 	Status     Status    `json:"status"`
+	Token      *string   `json:"token"`
 	Country    string    `json:"country"`
 	Iso2       string    `json:"iso2"`
 	CreatedAt  time.Time `json:"createdAt"`

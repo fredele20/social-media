@@ -13,6 +13,7 @@ var (
 	ErrListingData         = errors.New("failed to list data")
 	ErrFailedToGetUserById = errors.New("failed to get user by Id")
 	ErrFollowUserFailed    = errors.New("failed to follow user")
+	ErrLoginFailed         = errors.New("failed to login user from route")
 )
 
 type RoutesService struct {

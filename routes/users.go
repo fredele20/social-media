@@ -40,6 +40,27 @@ func (r *RoutesService) RegisterUser() gin.HandlerFunc {
 	}
 }
 
+func (r *RoutesService) Login() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var context, cancel = context.WithTimeout(context.Background(), time.Second * 100)
+		defer cancel()
+
+		var user models.Users
+		if err := ctx.BindJSON(&user); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrBindingToStruct.Error()})
+			return
+		}
+
+		foundUser, err := r.core.Login(context, user.Email, user.Password)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrLoginFailed.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, foundUser)
+	}
+}
+
 func (r *RoutesService) ListUsers() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var context, cancel = context.WithTimeout(context.Background(), time.Second*30)

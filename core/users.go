@@ -9,6 +9,7 @@ import (
 
 	"github.com/fredele20/social-media/database"
 	"github.com/fredele20/social-media/database/mongod"
+	"github.com/fredele20/social-media/libs/sessions"
 	"github.com/fredele20/social-media/models"
 	"github.com/fredele20/social-media/utils"
 	"github.com/nyaruka/phonenumbers"
@@ -25,17 +26,20 @@ var (
 	ErrFailedToGetUserByEmail   = errors.New("failed to get user with provided email")
 	ErrFailedToGetUserById      = errors.New("failed to get user with the provided id")
 	ErrCreateUserFollowerFailed = errors.New("failed to create a follower for the user")
+	ErrAuthenticationFailed     = errors.New("Sorry, email/password incorrect. Please try again.")
 )
 
 type CoreService struct {
 	db     database.Datastore
 	logger *logrus.Logger
+	sm     *sessions.SessionManager
 }
 
-func NewCoreService(db database.Datastore, l *logrus.Logger) *CoreService {
+func NewCoreService(db database.Datastore, l *logrus.Logger, sm *sessions.SessionManager) *CoreService {
 	return &CoreService{
 		db:     db,
 		logger: l,
+		sm: sm,
 	}
 }
 
@@ -85,6 +89,36 @@ func (c *CoreService) RegisterUser(ctx context.Context, payload *models.Users) (
 		c.logger.WithError(err).Error(err.Error())
 		return nil, ErrCreateUserFailed
 	}
+
+	return user, nil
+}
+
+func (c *CoreService) Login(ctx context.Context, email, password string) (*models.Users, error) {
+	user, err := c.db.GetUserByEmail(ctx, email)
+	if err != nil {
+		c.logger.WithError(err).Error("failed to get user email")
+		return nil, ErrAuthenticationFailed
+	}
+
+	validPassword, _ := utils.VerifyPassword(user.Password, password)
+	if !validPassword {
+		c.logger.WithError(err).Error("wrong password")
+		return nil, ErrAuthenticationFailed
+	}
+
+	token, err := c.sm.CreateSession(sessions.Session{
+		Email: user.Email,
+		UserID: user.Id,
+		Validity: 1,
+		UnitOfValidity: sessions.UnitOfValidityMinute,
+	})
+
+	if err != nil {
+		c.logger.WithError(err).Error("failed to generate token for user")
+		return nil, err
+	}
+
+	user.Token = &token
 
 	return user, nil
 }

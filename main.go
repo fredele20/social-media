@@ -9,6 +9,7 @@ import (
 	"github.com/fredele20/social-media/core"
 	"github.com/fredele20/social-media/database/mongod"
 	"github.com/fredele20/social-media/handlers"
+	"github.com/fredele20/social-media/libs/sessions"
 	"github.com/fredele20/social-media/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -36,7 +37,9 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 
-	core := core.NewCoreService(db, logger)
+	session := sessions.NewSessionManager(logger, secrets.JwtSecretKey, db)
+
+	core := core.NewCoreService(db, logger, session)
 	routes := routes.NewRoutesService(core)
 	handler := handlers.NewHandler(routes)
 
