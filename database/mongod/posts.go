@@ -2,6 +2,7 @@ package mongod
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/fredele20/social-media/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,12 +14,15 @@ func (d dbStore) postColl() *mongo.Collection {
 	return d.client.Database(d.dbName).Collection("posts")
 }
 
-
 func (d dbStore) CreatePost(ctx context.Context, payload *models.Posts) (*models.Posts, error) {
+	var comments []models.Comments
+	payload.Comments = comments
 	_, err := d.postColl().InsertOne(ctx, payload)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("Payload: ", payload)
 
 	return payload, nil
 }
@@ -64,7 +68,7 @@ func (d dbStore) GetPostByContent(ctx context.Context, content string) (*models.
 func (d dbStore) ListPosts(ctx context.Context, filters *models.PostFilters) (*models.ListPosts, error) {
 
 	opts := options.Find()
-	
+
 	if filters.Limit != 0 {
 		opts.SetLimit(filters.Limit)
 	}
@@ -109,17 +113,22 @@ func (d dbStore) AddLike(ctx context.Context, userId string) (*models.Posts, err
 	return &post, nil
 }
 
-func (d dbStore) AddComment(ctx context.Context, comment string) (*models.Posts, error) {
-	comments := []string{}
-	comments = append(comments, comment)
+func (d dbStore) AddComment(ctx context.Context, id string, comment *models.Posts) (*models.Posts, error) {
+	fmt.Println(id)
+	// comments := []models.Comments{}
+	// comments = append(comments, *comment)
+	// fmt.Println("comments:", comments)
+	// fmt.Println(comment.CommenterId)
 	update := bson.M{
-		"$set": bson.M{
-			"comments": comments,
+		"$push": bson.M{
+			"comments": comment,
 		},
 	}
 
 	var post models.Posts
-	if err := d.postColl().FindOneAndUpdate(ctx, "postId", update).Decode(&post); err != nil {
+	_, err := d.postColl().UpdateOne(ctx, bson.M{"id": id}, update, options.Update().SetUpsert(true))
+	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 

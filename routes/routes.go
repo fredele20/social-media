@@ -14,6 +14,8 @@ var (
 	ErrFailedToGetUserById = errors.New("failed to get user by Id")
 	ErrFollowUserFailed    = errors.New("failed to follow user")
 	ErrLoginFailed         = errors.New("failed to login user from route")
+	ErrCreatingPost        = errors.New("failed to create post")
+	ErrAddingCommnet       = errors.New("failed to add comment")
 )
 
 type RoutesService struct {

@@ -1,14 +1,12 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
-
 type Posts struct {
-	Id       primitive.ObjectID `json:"id"`
-	UserId   string             `json:"userId"`
-	Content  string             `json:"content"`
-	ImageURL string             `json:"imageUrl"`
-	Likes    []string           `json:"likes"`
-	Comments []*Comments           `json:"comments"`
+	Id       string     `json:"id"`
+	UserId   string     `json:"userId"`
+	Content  string     `json:"content"`
+	ImageURL string     `json:"imageUrl"`
+	Likes    []string   `json:"likes" bson:"likes"`
+	Comments []Comments `json:"comments" bson:"comments"`
 }
 
 type ListPosts struct {
@@ -20,12 +18,20 @@ type PostFilters struct {
 	Limit int64 `json:"limit"`
 }
 
-// type Likes struct {
-// 	PostId string             `json:"postId"`
-// 	UserId string             `json:"userId"`
-// }
+//	type Likes struct {
+//		PostId string             `json:"postId"`
+//		UserId string             `json:"userId"`
+//	}
+type Like struct {
+	Liker string `json:"liker"`
+}
+
+type CommentList struct {
+	Comments []*Comments `json:"comments"`
+	Count    int64       `json:"count"`
+}
 
 type Comments struct {
-	Commenter string `json:"commenter"`
-	Content   string `json:"content"`
+	CommenterId string `json:"commenter"`
+	Content     string `json:"content"`
 }

@@ -12,8 +12,19 @@ func (d dbStore) sessionColl() *mongo.Collection {
 
 func (d dbStore) SetSession(payload interface{}) error {
 	var ctx context.Context
+	// model := mongo.IndexModel{
+	// 	Keys: payload,
+	// 	Options: options.Index().SetExpireAfterSeconds(1),
+	// }
+	// _, err := d.sessionColl().Indexes().CreateOne(ctx, model)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return err
+	// }
+
 	_, err := d.sessionColl().InsertOne(ctx, payload)
 	if err != nil {
+		// fmt.Println(err)
 		return err
 	}
 

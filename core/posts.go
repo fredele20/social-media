@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/fredele20/social-media/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var (
@@ -17,6 +18,8 @@ var (
 )
 
 func (c *CoreService) CreatePost(ctx context.Context, payload *models.Posts) (*models.Posts, error) {
+	generateId := primitive.NewObjectID()
+	payload.Id = generateId.Hex()
 	post, err := c.db.CreatePost(ctx, payload)
 	if err != nil {
 		c.logger.WithError(err).Error(ErrCreatePostFailed)
@@ -66,8 +69,10 @@ func (c *CoreService) AddLike(ctx context.Context, userId string) (*models.Posts
 	return post, err
 }
 
-func (c *CoreService) AddComment(ctx context.Context, comment string) (*models.Posts, error) {
-	post, err := c.db.AddComment(ctx, comment)
+func (c *CoreService) AddComment(ctx context.Context, id string, payload *models.Posts) (*models.Posts, error) {
+	generateId := primitive.NewObjectID()
+	payload.Id = generateId.Hex()
+	post, err := c.db.AddComment(ctx, id, payload)
 	if err != nil {
 		c.logger.WithError(err).Error(ErrFailedToAddCommentToPost)
 		return nil, err

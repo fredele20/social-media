@@ -22,7 +22,7 @@ type Datastore interface {
 	GetPostByContent(ctx context.Context, content string) (*models.ListPosts, error)
 	ListPosts(ctx context.Context, filter *models.PostFilters) (*models.ListPosts, error)
 	AddLike(ctx context.Context, userId string) (*models.Posts, error)
-	AddComment(ctx context.Context, content string) (*models.Posts, error)
+	AddComment(ctx context.Context, id string, comment *models.Posts) (*models.Posts, error)
 
 	// User sessions
 	SetSession(payload interface{}) error
