@@ -34,7 +34,7 @@ func Authenticate() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		token := ctx.Request.Header.Get("token")
 		if token == "" {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrNoAuthHeaderProvided})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrNoAuthHeaderProvided.Error()})
 			ctx.Abort()
 			return
 		}
@@ -42,7 +42,7 @@ func Authenticate() gin.HandlerFunc {
 		payload, err := VerifyAuthToken(token)
 		if err != nil {
 			fmt.Println(err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrTokenVerificationFailed})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrTokenVerificationFailed.Error()})
 			ctx.Abort()
 			return
 		}

@@ -6,7 +6,6 @@ type Posts struct {
 	Content  string     `json:"content"`
 	ImageURL string     `json:"imageUrl"`
 	Likes    []string   `json:"likes" bson:"likes"`
-	Comments []Comments `json:"comments" bson:"comments"`
 }
 
 type ListPosts struct {
@@ -32,6 +31,9 @@ type CommentList struct {
 }
 
 type Comments struct {
-	CommenterId string `json:"commenter"`
-	Content     string `json:"content"`
+	Id       string `json:"id"`
+	PostId   string `json:"postId"`
+	UserId   string `json:"userId"`
+	Content  string `json:"content"`
+	ImageURL string `json:"imageUrl"`
 }

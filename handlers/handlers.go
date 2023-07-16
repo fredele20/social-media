@@ -20,11 +20,13 @@ func UserHandler(incomingRoutes *gin.Engine, h Handler) {
 	incomingRoutes.POST("/users/register/", h.routes.RegisterUser())
 	incomingRoutes.POST("/users/login/", h.routes.Login())
 	incomingRoutes.GET("/users/", h.routes.ListUsers())
-	incomingRoutes.GET("/users/:id", h.routes.GetUserById())
-	incomingRoutes.POST("/users/follow", h.routes.CreateUserFollower())
+	incomingRoutes.GET("/users/:id/", h.routes.GetUserById())
 
 	incomingRoutes.Use(middleware.Authenticate())
+	incomingRoutes.POST("/users/follow/", h.routes.CreateUserFollower())
+	incomingRoutes.GET("/users/followers/", h.routes.GetUserFollowers())
+	incomingRoutes.GET("/users/followings/", h.routes.GetUserFollowings())
 	incomingRoutes.POST("/posts/", h.routes.CreatePost())
-	incomingRoutes.PUT("/posts/comments/:id", h.routes.AddComment())
+	incomingRoutes.POST("/posts/comments/", h.routes.AddComment())
 	incomingRoutes.GET("/posts/", h.routes.ListPosts())
 }

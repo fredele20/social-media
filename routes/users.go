@@ -24,15 +24,13 @@ func (r *RoutesService) RegisterUser() gin.HandlerFunc {
 
 		var user *models.Users
 		if err := ctx.BindJSON(&user); err != nil {
-			// r.logger.WithError(err).Error(ErrBindingToStruct.Error())
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": ErrBindingToStruct.Error()})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		newUser, err := r.core.RegisterUser(context, user)
 		if err != nil {
-			// r.logger.WithError(err).Error(ErrCreatingUser.Error())
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": ErrCreatingUser.Error()})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -47,13 +45,13 @@ func (r *RoutesService) Login() gin.HandlerFunc {
 
 		var user models.Users
 		if err := ctx.BindJSON(&user); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrBindingToStruct.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		foundUser, err := r.core.Login(context, user.Email, user.Password)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrLoginFailed.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -68,15 +66,13 @@ func (r *RoutesService) ListUsers() gin.HandlerFunc {
 
 		var filters models.UserFilter
 		if err := ctx.BindJSON(&filters); err != nil {
-			r.logger.WithError(err).Error(ErrBindingToStruct.Error())
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": ErrBindingToStruct.Error()})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		users, err := r.core.ListUsers(context, &filters)
 		if err != nil {
-			r.logger.WithError(err).Error(ErrListingData.Error())
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": ErrListingData.Error()})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -93,8 +89,7 @@ func (r *RoutesService) GetUserById() gin.HandlerFunc {
 
 		user, err := r.core.GetUserById(context, userId)
 		if err != nil {
-			r.logger.WithError(err).Error(ErrFailedToGetUserById)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": ErrFailedToGetUserById})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -107,23 +102,61 @@ func (r *RoutesService) CreateUserFollower() gin.HandlerFunc {
 		var context, cancel = context.WithTimeout(context.Background(), time.Second * 30)
 		defer cancel()
 
-		var follower models.Follows
+		var follow models.Follows
 
-		if err := ctx.BindJSON(&follower); err != nil {
-			r.logger.WithError(err).Error(ErrBindingToStruct.Error())
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": ErrBindingToStruct.Error()})
+		if err := ctx.BindJSON(&follow); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// followerId := ctx.GetString("id")
-		// follower.FollowersId = append(follower.FollowersId, followerId)
-		follow, err := r.core.CreateUserFollower(context, &follower)
+		follow.FollowingId = ctx.GetString("id")
+
+		createFollow, err := r.core.CreateUserFollower(context, &follow)
 		if err != nil {
-			r.logger.WithError(err).Error(ErrFollowUserFailed)
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": ErrFollowUserFailed})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		ctx.JSON(http.StatusOK, follow)
+		ctx.JSON(http.StatusOK, createFollow)
+	}
+}
+
+func (r *RoutesService) GetUserFollowers() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var context, cancel = context.WithTimeout(context.Background(), time.Second * 30)
+		defer cancel()
+
+		var follow models.Follows
+
+		follow.UserId = ctx.GetString("id")
+
+		followers, err := r.core.GetUserFollowers(context, follow.UserId)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, followers)
+
+	}
+}
+
+func (r *RoutesService) GetUserFollowings() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var context, cancel = context.WithTimeout(context.Background(), time.Second * 30)
+		defer cancel()
+
+		var follow models.Follows
+
+		follow.FollowingId = ctx.GetString("id")
+
+		followings, err := r.core.GetUserFollowings(context, follow.FollowingId)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, followings)
+
 	}
 }

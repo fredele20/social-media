@@ -19,14 +19,14 @@ func (r *RoutesService) CreatePost() gin.HandlerFunc {
 
 		var post models.Posts
 		if err := ctx.BindJSON(&post); err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": ErrBindingToStruct.Error()})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		post.UserId = userId
 
 		newPost, err := r.core.CreatePost(context, &post)
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": ErrCreatingPost})
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -41,13 +41,13 @@ func (r *RoutesService) ListPosts() gin.HandlerFunc {
 
 		var filter models.PostFilters
 		if err := ctx.BindJSON(&filter); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrBindingToStruct.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		posts, err := r.core.ListPosts(context, filter)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrListingData.Error()})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -60,19 +60,19 @@ func (r *RoutesService) AddComment() gin.HandlerFunc {
 		var context, cancel = context.WithTimeout(context.Background(), time.Second * 30)
 		defer cancel()
 
-		postId := ctx.Param("id")
+		// postId := ctx.Param("id")
 
-		var comment models.Posts
+		var comment models.Comments
 		if err := ctx.BindJSON(&comment); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrAddingCommnet})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		comment.UserId = ctx.GetString("id")
 
-		post, err := r.core.AddComment(context, postId, &comment)
+		post, err := r.core.AddComment(context, &comment)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": ErrAddingCommnet})
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 

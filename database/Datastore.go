@@ -14,6 +14,8 @@ type Datastore interface {
 	GetUserByEmail(ctx context.Context, email string) (*models.Users, error)
 	GetUserById(ctx context.Context, id string) (*models.Users, error)
 	CreateUserFollower(ctx context.Context, payload *models.Follows) (*models.Follows, error)
+	GetUserFollowers(ctx context.Context, userId string) (*models.ListFollowers, error)
+	GetUserFollowings(ctx context.Context, followingId string) (*models.ListFollowings, error)
 
 	// Post implementation
 	CreatePost(ctx context.Context, payload *models.Posts) (*models.Posts, error)
@@ -22,7 +24,7 @@ type Datastore interface {
 	GetPostByContent(ctx context.Context, content string) (*models.ListPosts, error)
 	ListPosts(ctx context.Context, filter *models.PostFilters) (*models.ListPosts, error)
 	AddLike(ctx context.Context, userId string) (*models.Posts, error)
-	AddComment(ctx context.Context, id string, comment *models.Posts) (*models.Posts, error)
+	AddComment(ctx context.Context, comment *models.Comments) (*models.Comments, error)
 
 	// User sessions
 	SetSession(payload interface{}) error

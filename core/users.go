@@ -27,6 +27,9 @@ var (
 	ErrFailedToGetUserById      = errors.New("failed to get user with the provided id")
 	ErrCreateUserFollowerFailed = errors.New("failed to create a follower for the user")
 	ErrAuthenticationFailed     = errors.New("Sorry, email/password incorrect. Please try again.")
+	ErrUserCannotFollowSelf     = errors.New("sorry, you are not allowed to follow yourself")
+	ErrGettingUserFollowers     = errors.New("could not get the user followers")
+	ErrGettingUserFollowings = errors.New("could not get the users user is following")
 )
 
 type CoreService struct {
@@ -39,7 +42,7 @@ func NewCoreService(db database.Datastore, l *logrus.Logger, sm *sessions.Sessio
 	return &CoreService{
 		db:     db,
 		logger: l,
-		sm: sm,
+		sm:     sm,
 	}
 }
 
@@ -107,9 +110,9 @@ func (c *CoreService) Login(ctx context.Context, email, password string) (*model
 	}
 
 	token, err := c.sm.CreateSession(sessions.Session{
-		Email: user.Email,
-		UserID: user.Id,
-		Validity: 1,
+		Email:          user.Email,
+		UserID:         user.Id,
+		Validity:       1,
 		UnitOfValidity: sessions.UnitOfValidityMinute,
 	})
 
@@ -153,6 +156,12 @@ func (c *CoreService) GetUserById(ctx context.Context, id string) (*models.Users
 }
 
 func (c *CoreService) CreateUserFollower(ctx context.Context, payload *models.Follows) (*models.Follows, error) {
+	var err error
+	if payload.UserId == payload.FollowingId {
+		c.logger.WithError(err).Error(ErrUserCannotFollowSelf)
+		return nil, ErrUserCannotFollowSelf
+	}
+
 	follow, err := c.db.CreateUserFollower(ctx, payload)
 	if err != nil {
 		c.logger.WithError(err).Error(ErrCreateUserFollowerFailed)
@@ -160,4 +169,26 @@ func (c *CoreService) CreateUserFollower(ctx context.Context, payload *models.Fo
 	}
 
 	return follow, nil
+}
+
+func (c *CoreService) GetUserFollowers(ctx context.Context, userId string) (*models.ListFollowers, error) {
+
+	follower, err := c.db.GetUserFollowers(ctx, userId)
+	if err != nil {
+		c.logger.WithError(err).Error(ErrGettingUserFollowers)
+		return nil, err
+	}
+
+	return follower, nil
+}
+
+func (c *CoreService) GetUserFollowings(ctx context.Context, followingId string) (*models.ListFollowings, error) {
+	
+	following, err := c.db.GetUserFollowings(ctx, followingId)
+	if err != nil {
+		c.logger.WithError(err).Error(ErrGettingUserFollowings)
+		return nil, err
+	}
+
+	return following, nil
 }

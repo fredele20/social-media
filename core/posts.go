@@ -69,10 +69,10 @@ func (c *CoreService) AddLike(ctx context.Context, userId string) (*models.Posts
 	return post, err
 }
 
-func (c *CoreService) AddComment(ctx context.Context, id string, payload *models.Posts) (*models.Posts, error) {
+func (c *CoreService) AddComment(ctx context.Context, payload *models.Comments) (*models.Comments, error) {
 	generateId := primitive.NewObjectID()
 	payload.Id = generateId.Hex()
-	post, err := c.db.AddComment(ctx, id, payload)
+	post, err := c.db.AddComment(ctx, payload)
 	if err != nil {
 		c.logger.WithError(err).Error(ErrFailedToAddCommentToPost)
 		return nil, err

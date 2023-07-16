@@ -98,7 +98,24 @@ func (u dbStore) ListUsers(ctx context.Context, filters *models.UserFilter) (*mo
 }
 
 func (d dbStore) CreateUserFollower(ctx context.Context, payload *models.Follows) (*models.Follows, error) {
-	
+
+	filters := bson.M{
+		"$and": []bson.M{
+			{
+				"followingid": payload.FollowingId,
+			},
+			{
+				"userid": payload.UserId,
+			},
+		},
+	}
+
+	var user models.Users
+
+	if err := d.followers().FindOne(ctx, filters).Decode(&user); err == nil {
+		return nil, ErrDuplicateFollower
+	}
+
 	// var user models.Users
 	_, err := d.followers().InsertOne(ctx, payload)
 	if err != nil {
@@ -108,4 +125,64 @@ func (d dbStore) CreateUserFollower(ctx context.Context, payload *models.Follows
 	return payload, nil
 }
 
-var ErrDuplicate = errors.New("error, duplicate user")
+func (d dbStore) GetUserFollowers(ctx context.Context, userId string) (*models.ListFollowers, error) {
+	// opts := options.Find()
+	// opts.SetProjection(bson.M{
+	// 	"userid": false,
+	// })
+
+	filter := bson.M{"userid": userId}
+
+	var follows []*models.Follows
+	cursor, err := d.followers().Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if cursor.All(ctx, &follows); err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	count, err := d.followers().CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ListFollowers{
+		Followers: follows,
+		Count: count,
+	}, nil
+
+}
+
+func (d dbStore)	GetUserFollowings(ctx context.Context, followingId string) (*models.ListFollowings, error) {
+
+	filter := bson.M{"followingid": followingId}
+
+	var follow []*models.Follows
+	cursor, err := d.followers().Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	if cursor.All(ctx, &follow); err != nil {
+		return nil, err
+	}
+
+	count, err := d.followers().CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ListFollowings{
+		Followings: follow,
+		Count: count,
+	}, nil
+
+}
+
+var (
+	ErrDuplicate         = errors.New("error, duplicate user")
+	ErrDuplicateFollower = errors.New("error, you can not follow a user more than once")
+)

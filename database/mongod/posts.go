@@ -2,7 +2,6 @@ package mongod
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/fredele20/social-media/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,15 +13,15 @@ func (d dbStore) postColl() *mongo.Collection {
 	return d.client.Database(d.dbName).Collection("posts")
 }
 
+func (d dbStore) commentColl() *mongo.Collection {
+	return d.client.Database(d.dbName).Collection("comments")
+}
+
 func (d dbStore) CreatePost(ctx context.Context, payload *models.Posts) (*models.Posts, error) {
-	var comments []models.Comments
-	payload.Comments = comments
 	_, err := d.postColl().InsertOne(ctx, payload)
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("Payload: ", payload)
 
 	return payload, nil
 }
@@ -113,24 +112,11 @@ func (d dbStore) AddLike(ctx context.Context, userId string) (*models.Posts, err
 	return &post, nil
 }
 
-func (d dbStore) AddComment(ctx context.Context, id string, comment *models.Posts) (*models.Posts, error) {
-	fmt.Println(id)
-	// comments := []models.Comments{}
-	// comments = append(comments, *comment)
-	// fmt.Println("comments:", comments)
-	// fmt.Println(comment.CommenterId)
-	update := bson.M{
-		"$push": bson.M{
-			"comments": comment,
-		},
-	}
-
-	var post models.Posts
-	_, err := d.postColl().UpdateOne(ctx, bson.M{"id": id}, update, options.Update().SetUpsert(true))
+func (d dbStore) AddComment(ctx context.Context, payload *models.Comments) (*models.Comments, error) {
+	_, err := d.commentColl().InsertOne(ctx, payload)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
-	return &post, nil
+	return payload, nil
 }
