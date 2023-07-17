@@ -171,6 +171,15 @@ func (c *CoreService) CreateUserFollower(ctx context.Context, payload *models.Fo
 	return follow, nil
 }
 
+func (c *CoreService) CreateNewUserFollower(ctx context.Context, payload *models.Follows) (*models.NewFollows, error) {
+	follow, err := c.db.CreateNewUserFollower(ctx, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return follow, nil
+}
+
 func (c *CoreService) GetUserFollowers(ctx context.Context, userId string) (*models.ListFollowers, error) {
 
 	follower, err := c.db.GetUserFollowers(ctx, userId)

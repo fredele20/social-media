@@ -23,7 +23,8 @@ func UserHandler(incomingRoutes *gin.Engine, h Handler) {
 	incomingRoutes.GET("/users/:id/", h.routes.GetUserById())
 
 	incomingRoutes.Use(middleware.Authenticate())
-	incomingRoutes.POST("/users/follow/", h.routes.CreateUserFollower())
+	// incomingRoutes.POST("/users/follow/", h.routes.CreateUserFollower())
+	incomingRoutes.POST("/users/follow/", h.routes.CreateNewUserFollower())
 	incomingRoutes.GET("/users/followers/", h.routes.GetUserFollowers())
 	incomingRoutes.GET("/users/followings/", h.routes.GetUserFollowings())
 	incomingRoutes.POST("/posts/", h.routes.CreatePost())

@@ -16,7 +16,7 @@ func (u dbStore) user() *mongo.Collection {
 }
 
 func (u dbStore) followers() *mongo.Collection {
-	return u.client.Database(u.dbName).Collection("followers")
+	return u.client.Database(u.dbName).Collection("follows")
 }
 
 func (u dbStore) CreateUser(ctx context.Context, payload *models.Users) (*models.Users, error) {
@@ -123,6 +123,69 @@ func (d dbStore) CreateUserFollower(ctx context.Context, payload *models.Follows
 	}
 
 	return payload, nil
+}
+
+func (d dbStore) CreateNewUserFollower(ctx context.Context, payload *models.Follows) (*models.NewFollows, error) {
+	fmt.Println("userId: ", payload.UserId)
+	fmt.Println("followingId: ", payload.FollowingId)
+	
+	var follow models.NewFollows
+	// filter := bson.M{}
+	userId := payload.UserId
+	update := bson.M{
+		"$push": bson.M{
+			"following": payload.FollowingId,
+		},
+	}
+	
+	if err := d.followers().FindOne(ctx, bson.M{"userid": userId}).Decode(&follow); err == nil {
+		if err := d.followers().FindOne(ctx, bson.M{"following": payload.FollowingId}).Decode(&follow); err == nil {
+			return nil, ErrDuplicateFollower
+		}
+		_, err := d.followers().UpdateOne(ctx, bson.M{"userid": userId}, update)
+		if err != nil {
+			return nil, err
+		}
+
+		follow.UserId = payload.FollowingId
+		follow.Followers = append(follow.Followers, payload.UserId)
+
+		_, err = d.followers().InsertOne(ctx, follow)
+		if err != nil {
+			return nil, err
+		}
+		return &follow, nil
+	}
+
+	follow.UserId = userId
+	follow.Following = append(follow.Following, payload.FollowingId)
+
+	_, err := d.followers().InsertOne(ctx, follow)
+	if err != nil {
+		return nil, err
+	}
+
+	follow.UserId = payload.FollowingId
+	follow.Followers = append(follow.Followers, payload.UserId)
+	// payload.FollowingId = ""
+
+	_, err = d.followers().InsertOne(ctx, follow)
+	if err != nil {
+		return nil, err
+	}
+
+	update = bson.M{
+		"$pull": bson.M{
+			"following": payload.FollowingId,
+		},
+	}
+
+	_, err = d.followers().UpdateOne(ctx, bson.M{"userid": follow.UserId}, update)
+		if err != nil {
+			return nil, err
+		}
+	
+	return &follow, nil
 }
 
 func (d dbStore) GetUserFollowers(ctx context.Context, userId string) (*models.ListFollowers, error) {

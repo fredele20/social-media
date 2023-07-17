@@ -13,6 +13,10 @@ type ListPosts struct {
 	Posts []*Posts `json:"posts"`
 }
 
+// type ListFollowingUsersPosts struct {
+// 	UserId string `json:"userid"`
+// }
+
 type PostFilters struct {
 	Limit int64 `json:"limit"`
 }

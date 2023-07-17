@@ -59,6 +59,8 @@ func (c *CoreService) ListPosts(ctx context.Context, filter models.PostFilters) 
 	return posts, nil
 }
 
+// func (c *CoreService) ListFollowingUsersPosts(ctx context.Context) (*models.ListPosts, error) {}
+
 func (c *CoreService) AddLike(ctx context.Context, userId string) (*models.Posts, error) {
 	post, err := c.db.AddLike(ctx, userId)
 	if err != nil {

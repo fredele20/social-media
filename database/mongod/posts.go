@@ -39,6 +39,10 @@ func (d dbStore) GetPostById(ctx context.Context, id string) (*models.Posts, err
 	return d.GetPostByField(ctx, "id", id)
 }
 
+func (d dbStore) GetPostsByUserId(ctx context.Context, userId string) (*models.Posts, error) {
+	return d.GetPostByField(ctx, "userid", userId)
+}
+
 func (d dbStore) GetPostByContent(ctx context.Context, content string) (*models.ListPosts, error) {
 	cursor, err := d.postColl().Find(ctx, content)
 	if err != nil {
@@ -110,6 +114,31 @@ func (d dbStore) AddLike(ctx context.Context, userId string) (*models.Posts, err
 	}
 
 	return &post, nil
+}
+
+func (d dbStore) ListFollowingUsersPosts(ctx context.Context, userId string) (*models.ListPosts, error) {
+	filter := bson.M{"userid": userId}
+
+	cursor, err := d.postColl().Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var posts []*models.Posts
+
+	if err := cursor.All(ctx, &posts); err != nil {
+		return nil, err
+	}
+
+	count, err := d.postColl().CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	
+	return &models.ListPosts{
+		Posts: posts,
+		Count: count,
+	}, nil
 }
 
 func (d dbStore) AddComment(ctx context.Context, payload *models.Comments) (*models.Comments, error) {
