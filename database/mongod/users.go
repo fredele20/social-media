@@ -125,12 +125,11 @@ func (d dbStore) CreateUserFollower(ctx context.Context, payload *models.Follows
 	return payload, nil
 }
 
+
+// TODO: Coming back to this function
 func (d dbStore) CreateNewUserFollower(ctx context.Context, payload *models.Follows) (*models.NewFollows, error) {
-	fmt.Println("userId: ", payload.UserId)
-	fmt.Println("followingId: ", payload.FollowingId)
-	
+
 	var follow models.NewFollows
-	// filter := bson.M{}
 	userId := payload.UserId
 	update := bson.M{
 		"$push": bson.M{
@@ -147,44 +146,70 @@ func (d dbStore) CreateNewUserFollower(ctx context.Context, payload *models.Foll
 			return nil, err
 		}
 
-		follow.UserId = payload.FollowingId
-		follow.Followers = append(follow.Followers, payload.UserId)
+		update = bson.M{
+			"$push": bson.M{
+				"followers": userId,
+			},
+		}
 
+		if err := d.followers().FindOne(ctx, bson.M{"userid": payload.FollowingId}).Decode(&follow); err == nil {
+			if err := d.followers().FindOne(ctx, bson.M{"following": payload.FollowingId}).Decode(&follow); err == nil {
+				return nil, ErrDuplicateFollower
+			}
+			_, err := d.followers().UpdateOne(ctx, bson.M{"userid": payload.FollowingId}, update)
+			if err != nil {
+				return nil, err
+			}
+			return &follow, nil
+		}
+
+		follow.UserId = payload.FollowingId
+		follow.Following = make([]string, 0)
+		follow.Followers = make([]string, 0)
+		follow.Followers = append(follow.Followers, payload.UserId)
 		_, err = d.followers().InsertOne(ctx, follow)
+		if err != nil {
+			return nil, err
+		}
+
+		return &follow, nil
+	}
+
+	follow.Following = make([]string, 0)
+	follow.Followers = make([]string, 0)
+	follow.Following = append(follow.Following, payload.FollowingId)
+	follow.UserId = userId
+	_, err := d.followers().InsertOne(ctx, follow)
+	if err != nil {
+		return nil, err
+	}
+
+	update = bson.M{
+		"$push": bson.M{
+			"followers": userId,
+		},
+	}
+
+	if err := d.followers().FindOne(ctx, bson.M{"userid": payload.FollowingId}).Decode(&follow); err == nil {
+		if err := d.followers().FindOne(ctx, bson.M{"following": payload.FollowingId}).Decode(&follow); err == nil {
+			return nil, ErrDuplicateFollower
+		}
+		_, err := d.followers().UpdateOne(ctx, bson.M{"userid": payload.FollowingId}, update)
 		if err != nil {
 			return nil, err
 		}
 		return &follow, nil
 	}
 
-	follow.UserId = userId
-	follow.Following = append(follow.Following, payload.FollowingId)
-
-	_, err := d.followers().InsertOne(ctx, follow)
-	if err != nil {
-		return nil, err
-	}
-
 	follow.UserId = payload.FollowingId
+	follow.Following = make([]string, 0)
+	follow.Followers = make([]string, 0)
 	follow.Followers = append(follow.Followers, payload.UserId)
-	// payload.FollowingId = ""
-
 	_, err = d.followers().InsertOne(ctx, follow)
 	if err != nil {
 		return nil, err
 	}
 
-	update = bson.M{
-		"$pull": bson.M{
-			"following": payload.FollowingId,
-		},
-	}
-
-	_, err = d.followers().UpdateOne(ctx, bson.M{"userid": follow.UserId}, update)
-		if err != nil {
-			return nil, err
-		}
-	
 	return &follow, nil
 }
 
