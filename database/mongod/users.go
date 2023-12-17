@@ -33,13 +33,17 @@ func (u dbStore) CreateUser(ctx context.Context, payload *models.Users) (*models
 
 	var user models.Users
 
-	if err := u.user().FindOne(ctx, filters).Decode(&user); err == nil {
-		return nil, ErrDuplicate
-	}
-	_, err := u.user().InsertOne(ctx, payload)
+	_, err := u.CreateOne(ctx, filters, user, payload)
 	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	// if err := u.user().FindOne(ctx, filters).Decode(&user); err == nil {
+	// 	return nil, ErrDuplicate
+	// }
+	// _, err := u.user().InsertOne(ctx, payload)
 
 	return payload, nil
 }
@@ -127,7 +131,7 @@ func (d dbStore) CreateUserFollower(ctx context.Context, payload *models.Follows
 
 
 // TODO: Coming back to this function
-func (d dbStore) CreateNewUserFollower(ctx context.Context, payload *models.Follows) (*models.NewFollows, error) {
+func (d dbStore) CreateUserFollows(ctx context.Context, payload *models.Follows) (*models.NewFollows, error) {
 
 	var follow models.NewFollows
 	userId := payload.UserId
@@ -214,58 +218,39 @@ func (d dbStore) CreateNewUserFollower(ctx context.Context, payload *models.Foll
 }
 
 func (d dbStore) GetUserFollowers(ctx context.Context, userId string) (*models.ListFollowers, error) {
-	// opts := options.Find()
-	// opts.SetProjection(bson.M{
-	// 	"userid": false,
-	// })
 
 	filter := bson.M{"userid": userId}
 
-	var follows []*models.Follows
-	cursor, err := d.followers().Find(ctx, filter)
+	var follows *models.NewFollows
+	err := d.followers().FindOne(ctx, filter).Decode(&follows)
 	if err != nil {
 		return nil, err
 	}
 
-	if cursor.All(ctx, &follows); err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	count, err := d.followers().CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
+	count := len(follows.Followers)
 
 	return &models.ListFollowers{
-		Followers: follows,
-		Count: count,
+		Followers: follows.Followers,
+		Count: int64(count),
 	}, nil
 
 }
 
-func (d dbStore)	GetUserFollowings(ctx context.Context, followingId string) (*models.ListFollowings, error) {
+func (d dbStore)	GetUserFollowings(ctx context.Context, userId string) (*models.ListFollowings, error) {
 
-	filter := bson.M{"followingid": followingId}
+	filter := bson.M{"userid": userId}
 
-	var follow []*models.Follows
-	cursor, err := d.followers().Find(ctx, filter)
+	var follow *models.NewFollows
+	err := d.followers().FindOne(ctx, filter).Decode(&follow)
 	if err != nil {
 		return nil, err
 	}
 
-	if cursor.All(ctx, &follow); err != nil {
-		return nil, err
-	}
-
-	count, err := d.followers().CountDocuments(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
+	count := len(follow.Following)
 
 	return &models.ListFollowings{
-		Followings: follow,
-		Count: count,
+		Followings: follow.Following,
+		Count: int64(count),
 	}, nil
 
 }

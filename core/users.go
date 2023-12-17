@@ -155,24 +155,8 @@ func (c *CoreService) GetUserById(ctx context.Context, id string) (*models.Users
 	return user, nil
 }
 
-func (c *CoreService) CreateUserFollower(ctx context.Context, payload *models.Follows) (*models.Follows, error) {
-	var err error
-	if payload.UserId == payload.FollowingId {
-		c.logger.WithError(err).Error(ErrUserCannotFollowSelf)
-		return nil, ErrUserCannotFollowSelf
-	}
-
-	follow, err := c.db.CreateUserFollower(ctx, payload)
-	if err != nil {
-		c.logger.WithError(err).Error(ErrCreateUserFollowerFailed)
-		return nil, err
-	}
-
-	return follow, nil
-}
-
-func (c *CoreService) CreateNewUserFollower(ctx context.Context, payload *models.Follows) (*models.NewFollows, error) {
-	follow, err := c.db.CreateNewUserFollower(ctx, payload)
+func (c *CoreService) CreateUserFollows(ctx context.Context, payload *models.Follows) (*models.NewFollows, error) {
+	follow, err := c.db.CreateUserFollows(ctx, payload)
 	if err != nil {
 		return nil, err
 	}

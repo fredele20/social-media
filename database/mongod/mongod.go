@@ -37,3 +37,15 @@ func ConnectDB(connectionUri, databaseName string) (database.Datastore, error) {
 	fmt.Println("connection to mongodb established...")
 	return &dbStore{dbName: databaseName, client: client}, nil
 }
+func (u dbStore) CreateOne(ctx context.Context, filter, data, payload interface{}) (interface{}, error) {
+	
+	if err := u.user().FindOne(ctx, filter).Decode(&data); err == nil {
+		return nil, ErrDuplicate
+	}
+	_, err := u.user().InsertOne(ctx, payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return payload, nil
+}

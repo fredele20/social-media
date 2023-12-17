@@ -97,31 +97,8 @@ func (r *RoutesService) GetUserById() gin.HandlerFunc {
 	}
 }
 
-func (r *RoutesService) CreateUserFollower() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var context, cancel = context.WithTimeout(context.Background(), time.Second * 30)
-		defer cancel()
 
-		var follow models.Follows
-
-		if err := ctx.BindJSON(&follow); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		follow.FollowingId = ctx.GetString("id")
-
-		createFollow, err := r.core.CreateUserFollower(context, &follow)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		ctx.JSON(http.StatusOK, createFollow)
-	}
-}
-
-func (r *RoutesService) CreateNewUserFollower() gin.HandlerFunc {
+func (r *RoutesService) CreateUserFollows() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var context, cancel = context.WithTimeout(context.Background(), time.Second * 30)
 		defer cancel()
@@ -133,7 +110,7 @@ func (r *RoutesService) CreateNewUserFollower() gin.HandlerFunc {
 		}
 
 		follows.UserId = ctx.GetString("id")
-		createFollow, err := r.core.CreateNewUserFollower(context, &follows)
+		createFollow, err := r.core.CreateUserFollows(context, &follows)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

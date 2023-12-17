@@ -13,10 +13,9 @@ type Datastore interface {
 	GetUserByField(ctx context.Context, field, value string) (*models.Users, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.Users, error)
 	GetUserById(ctx context.Context, id string) (*models.Users, error)
-	CreateUserFollower(ctx context.Context, payload *models.Follows) (*models.Follows, error)
-	CreateNewUserFollower(ctx context.Context, payload *models.Follows) (*models.NewFollows, error)
+	CreateUserFollows(ctx context.Context, payload *models.Follows) (*models.NewFollows, error)
 	GetUserFollowers(ctx context.Context, userId string) (*models.ListFollowers, error)
-	GetUserFollowings(ctx context.Context, followingId string) (*models.ListFollowings, error)
+	GetUserFollowings(ctx context.Context, userId string) (*models.ListFollowings, error)
 	ListFollowingUsersPosts(ctx context.Context, userId string) (*models.ListPosts, error)
 
 	// Post implementation

@@ -6,12 +6,12 @@ type Follows struct {
 }
 
 type ListFollowers struct {
-	Followers []*Follows `json:"followers"`
+	Followers []string `json:"followers"`
 	Count     int64      `json:"count"`
 }
 
 type ListFollowings struct {
-	Followings []*Follows `json:"following"`
+	Followings []string `json:"following"`
 	Count      int64      `json:"count"`
 }
 
