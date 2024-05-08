@@ -11,7 +11,7 @@ import (
 	"github.com/fredele20/social-media/database/mongod"
 	"github.com/fredele20/social-media/libs/sessions"
 	"github.com/fredele20/social-media/models"
-	"github.com/fredele20/social-media/utils"
+	// "github.com/fredele20/social-media/utils"
 	"github.com/nyaruka/phonenumbers"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -29,7 +29,7 @@ var (
 	ErrAuthenticationFailed     = errors.New("Sorry, email/password incorrect. Please try again.")
 	ErrUserCannotFollowSelf     = errors.New("sorry, you are not allowed to follow yourself")
 	ErrGettingUserFollowers     = errors.New("could not get the user followers")
-	ErrGettingUserFollowings = errors.New("could not get the users user is following")
+	ErrGettingUserFollowings    = errors.New("could not get the users user is following")
 )
 
 type CoreService struct {
@@ -176,7 +176,7 @@ func (c *CoreService) GetUserFollowers(ctx context.Context, userId string) (*mod
 }
 
 func (c *CoreService) GetUserFollowings(ctx context.Context, followingId string) (*models.ListFollowings, error) {
-	
+
 	following, err := c.db.GetUserFollowings(ctx, followingId)
 	if err != nil {
 		c.logger.WithError(err).Error(ErrGettingUserFollowings)

@@ -85,7 +85,7 @@ func (u dbStore) ListUsers(ctx context.Context, filters *models.UserFilter) (*mo
 		return nil, err
 	}
 
-	if cursor.All(ctx, &users); err != nil {
+	if err := cursor.All(ctx, &users); err != nil {
 		fmt.Println(err)
 		return nil, err
 	}

@@ -1,11 +1,11 @@
 package models
 
 type Posts struct {
-	Id       string     `json:"id"`
-	UserId   string     `json:"userId"`
-	Content  string     `json:"content"`
-	ImageURL string     `json:"imageUrl"`
-	Likes    []string   `json:"likes" bson:"likes"`
+	Id       string   `json:"id"`
+	UserId   string   `json:"userId"`
+	Content  string   `json:"content"`
+	ImageURL string   `json:"imageUrl"`
+	Likes    []string `json:"likes" bson:"likes"`
 }
 
 type ListPosts struct {
